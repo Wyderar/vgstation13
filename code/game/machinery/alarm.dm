@@ -40,7 +40,6 @@
 	var/list/air_scrub_info = list()
 
 /obj/machinery/alarm
-	desc = "An alarm used to control the area's atmospherics systems."
 	icon = 'icons/obj/monitors.dmi'
 	icon_state = "alarm0"
 	anchored = 1
@@ -78,6 +77,9 @@
 
 	var/list/TLV = list()
 
+	// Gases which do not show up under "other"
+	var/static/list/mundane_gases = list(GAS_OXYGEN, GAS_NITROGEN, GAS_PLASMA, GAS_CARBON)
+
 	machine_flags = WIREJACK
 	holomap = TRUE
 	auto_holomap = TRUE
@@ -108,7 +110,6 @@
 	TLV["nitrogen"] =		list(-1, -1,  -1,  -1) // Partial pressure, kpa
 	TLV["carbon_dioxide"] = list(-1.0, -1.0, 5, 10) // Partial pressure, kpa
 	TLV["plasma"] =			list(-1.0, -1.0, 0.2, 0.5) // Partial pressure, kpa
-	TLV["n2o"] =			list(-1.0, -1.0, 0.5, 1.0) // Partial pressure, kpa
 	TLV["other"] =			list(-1.0, -1.0, 0.5, 1.0) // Partial pressure, kpa
 	TLV["pressure"] =		list(ONE_ATMOSPHERE*0.80,ONE_ATMOSPHERE*0.90,ONE_ATMOSPHERE*1.10,ONE_ATMOSPHERE*1.20) /* kpa */
 	TLV["temperature"] =	list(T0C-30, T0C, T0C+40, T0C+70) // K
@@ -121,7 +122,6 @@
 			TLV["oxygen"] =			list(-1.0, -1.0,-1.0,-1.0)
 			TLV["carbon_dioxide"] = list(-1.0, -1.0,   5,  10) // Partial pressure, kpa
 			TLV["plasma"] =			list(-1.0, -1.0, 0.2, 0.5) // Partial pressure, kpa
-			TLV["n2o"] =			list(-1.0, -1.0, 0.5, 1.0) // Partial pressure, kpa
 			TLV["other"] =			list(-1.0, -1.0, 0.5, 1.0) // Partial pressure, kpa
 			TLV["pressure"] =		list(0,ONE_ATMOSPHERE*0.10,ONE_ATMOSPHERE*1.40,ONE_ATMOSPHERE*1.60) /* kpa */
 			TLV["temperature"] =	list(20, 40, 140, 160) // K
@@ -137,7 +137,7 @@
 
 	if(building)
 		if(loc)
-			src.forceMove(loc)
+			src.loc = loc
 
 		if(dir)
 			src.dir = dir
@@ -276,22 +276,17 @@
 
 	var/partial_pressure = R_IDEAL_GAS_EQUATION*environment.temperature/environment.volume
 	var/environment_pressure = environment.return_pressure()
-	var/n2o_moles = 0.0
 	var/other_moles = 0.0
-	for(var/datum/gas/G in environment.trace_gases)
-		if(istype(G, /datum/gas/sleeping_agent))
-			n2o_moles+=G.moles
-		else
-			other_moles+=G.moles
+	for(var/id in environment.gas - mundane_gases)
+		other_moles += environment.gas[id]
 
-	var/pressure_dangerlevel = get_danger_level(environment_pressure, TLV["pressure"])
-	var/oxygen_dangerlevel = get_danger_level(environment.oxygen*partial_pressure, TLV["oxygen"])
-	var/nitrogen_dangerlevel = get_danger_level(environment.nitrogen*partial_pressure, TLV["nitrogen"])
-	var/co2_dangerlevel = get_danger_level(environment.carbon_dioxide*partial_pressure, TLV["carbon_dioxide"])
-	var/plasma_dangerlevel = get_danger_level(environment.toxins*partial_pressure, TLV["plasma"])
+	var/pressure_dangerlevel    = get_danger_level(environment_pressure, TLV["pressure"])
+	var/oxygen_dangerlevel      = get_danger_level(environment.gas[GAS_OXYGEN]   * partial_pressure, TLV["oxygen"])
+	var/nitrogen_dangerlevel    = get_danger_level(environment.gas[GAS_NITROGEN] * partial_pressure, TLV["nitrogen"])
+	var/co2_dangerlevel         = get_danger_level(environment.gas[GAS_CARBON]   * partial_pressure, TLV["carbon_dioxide"])
+	var/plasma_dangerlevel      = get_danger_level(environment.gas[GAS_PLASMA]   * partial_pressure, TLV["plasma"])
 	var/temperature_dangerlevel = get_danger_level(environment.temperature, TLV["temperature"])
-	var/n2o_dangerlevel = get_danger_level(n2o_moles*partial_pressure, TLV["n2o"])
-	var/other_dangerlevel = get_danger_level(other_moles*partial_pressure, TLV["other"])
+	var/other_dangerlevel       = get_danger_level(other_moles * partial_pressure, TLV["other"])
 
 	return max(
 		pressure_dangerlevel,
@@ -299,7 +294,6 @@
 		co2_dangerlevel,
 		nitrogen_dangerlevel,
 		plasma_dangerlevel,
-		n2o_dangerlevel,
 		other_dangerlevel,
 		temperature_dangerlevel
 		)
@@ -496,12 +490,6 @@
 
 	interact(user)
 
-/obj/machinery/alarm/attack_ai(mob/user)
-	if(aidisabled)
-		to_chat(user, "<span class='warning'>AI control of this device has been disabled.</span>")
-		return
-	..()
-
 /obj/machinery/alarm/proc/ui_air_status()
 	var/turf/location = get_turf(src)
 
@@ -509,7 +497,7 @@
 		return null
 
 	var/datum/gas_mixture/environment = location.return_air()
-	var/total = environment.oxygen + environment.carbon_dioxide + environment.toxins + environment.nitrogen
+	var/total = environment.total_moles()
 	if(total==0)
 		return null
 
@@ -520,32 +508,28 @@
 	var/pressure_dangerlevel = get_danger_level(environment_pressure, current_settings)
 
 	current_settings = TLV["oxygen"]
-	var/oxygen_dangerlevel = get_danger_level(environment.oxygen*partial_pressure, current_settings)
-	var/oxygen_percent = round(environment.oxygen / total * 100, 2)
+	var/oxygen_dangerlevel = get_danger_level(environment.gas[GAS_OXYGEN]*partial_pressure, current_settings)
+	var/oxygen_percent = round(environment.gas[GAS_OXYGEN] / total * 100, 2)
 
 	current_settings = TLV["nitrogen"]
-	var/nitrogen_dangerlevel = get_danger_level(environment.nitrogen*partial_pressure, current_settings)
-	var/nitrogen_percent = round(environment.nitrogen / total * 100, 2)
+	var/nitrogen_dangerlevel = get_danger_level(environment.gas[GAS_OXYGEN]*partial_pressure, current_settings)
+	var/nitrogen_percent = round(environment.gas[GAS_OXYGEN] / total * 100, 2)
 
 	current_settings = TLV["carbon_dioxide"]
-	var/co2_dangerlevel = get_danger_level(environment.carbon_dioxide*partial_pressure, current_settings)
-	var/co2_percent = round(environment.carbon_dioxide / total * 100, 2)
+	var/co2_dangerlevel = get_danger_level(environment.gas[GAS_OXYGEN]*partial_pressure, current_settings)
+	var/co2_percent = round(environment.gas[GAS_OXYGEN] / total * 100, 2)
 
 	current_settings = TLV["plasma"]
-	var/plasma_dangerlevel = get_danger_level(environment.toxins*partial_pressure, current_settings)
-	var/plasma_percent = round(environment.toxins / total * 100, 2)
+	var/plasma_dangerlevel = get_danger_level(environment.gas[GAS_OXYGEN]*partial_pressure, current_settings)
+	var/plasma_percent = round(environment.gas[GAS_OXYGEN] / total * 100, 2)
 
 	current_settings = TLV["other"]
-	var/n2o_moles = 0.0
-	var/other_moles = 0.0
-	for(var/datum/gas/G in environment.trace_gases)
-		if(istype(G, /datum/gas/sleeping_agent))
-			n2o_moles+=G.moles
-		else
-			other_moles+=G.moles
+	var/other_moles = 0
+	for (var/id in environment.gas - mundane_gases)
+		other_moles += environment.gas[id]
+
 	var/other_dangerlevel = get_danger_level(other_moles*partial_pressure, current_settings)
-	current_settings = TLV["n2o"]
-	var/n2o_dangerlevel = get_danger_level(n2o_moles*partial_pressure, current_settings)
+	var/other_percent = round(other_moles / total * 100, 2)
 
 	current_settings = TLV["temperature"]
 	var/temperature_dangerlevel = get_danger_level(environment.temperature, current_settings)
@@ -561,8 +545,7 @@
 	percentages["nitrogen"]=nitrogen_percent
 	percentages["co2"]=co2_percent
 	percentages["plasma"]=plasma_percent
-	percentages["n2o"]=n2o_moles
-	percentages["other"]=other_moles
+	percentages["other"]=other_percent
 	data["contents"]=percentages
 
 	var/danger[0]
@@ -572,7 +555,6 @@
 	danger["nitrogen"]=nitrogen_dangerlevel
 	danger["co2"]=co2_dangerlevel
 	danger["plasma"]=plasma_dangerlevel
-	danger["n2o"]=n2o_dangerlevel
 	danger["other"]=other_dangerlevel
 	danger["overall"]=max(pressure_dangerlevel,oxygen_dangerlevel,nitrogen_dangerlevel,co2_dangerlevel,plasma_dangerlevel,other_dangerlevel,temperature_dangerlevel)
 	data["danger"]=danger
@@ -656,9 +638,20 @@
 /obj/machinery/alarm/interact(mob/user)
 	if(buildstage!=2)
 		return
-	if(wiresexposed)
+
+	if ( (get_dist(src, user) > 1 ))
+		if (!istype(user, /mob/living/silicon))
+			user << browse(null, "window=AAlarmwires")
+			return
+
+
+		else if (istype(user, /mob/living/silicon) && aidisabled)
+			to_chat(user, "AI control for this Air Alarm interface has been disabled.")
+			user << browse(null, "window=air_alarm")
+			return
+
+	if(wiresexposed && (isMoMMI(user) || !istype(user, /mob/living/silicon)))
 		wires.Interact(user)
-		return
 	if(!shorted)
 		ui_interact(user)
 
@@ -784,13 +777,13 @@
 
 	if(href_list["temperature"])
 		var/list/selected = TLV["temperature"]
-		var/max_temperature = selected[3] - T0C
-		var/min_temperature = selected[2] - T0C
-		var/input_temperature = input("What temperature (in C) would you like the system to maintain? (Capped between [min_temperature]C and [max_temperature]C)", "Thermostat Controls") as num|null
+		var/max_temperature = min(selected[3] - T0C, MAX_TEMPERATURE)
+		var/min_temperature = max(selected[2] - T0C, MIN_TEMPERATURE)
+		var/input_temperature = input("What temperature would you like the system to maintain? (Capped between [min_temperature]C and [max_temperature]C)", "Thermostat Controls") as num|null
 		if(input_temperature==null)
 			return
-		if(!input_temperature || input_temperature > max_temperature || input_temperature < min_temperature)
-			to_chat(usr, "<span class='warning'>Temperature must be between [min_temperature]C and [max_temperature]C.</span>")
+		if(!input_temperature || input_temperature >= max_temperature || input_temperature <= min_temperature)
+			to_chat(usr, "Temperature must be between [min_temperature]C and [max_temperature]C")
 		else
 			target_temperature = input_temperature + T0C
 		return 1
@@ -884,6 +877,10 @@
 		to_chat(user, "<span class='info'>It is not wired.</span>")
 	if (buildstage < 1)
 		to_chat(user, "<span class='info'>The circuit is missing.</span>")
+
+/obj/machinery/alarm/change_area(oldarea, newarea)
+	..()
+	name = replacetext(name,oldarea,newarea)
 
 /obj/machinery/alarm/wirejack(var/mob/living/silicon/pai/P)
 	if(..())
@@ -1098,6 +1095,8 @@ FIRE ALARM
 /obj/machinery/firealarm/Topic(href, href_list)
 	if(..())
 		return 1
+	if (usr.stat || stat & (BROKEN|NOPOWER))
+		return
 
 	if (buildstage != 2)
 		return
@@ -1144,7 +1143,7 @@ var/global/list/firealarms = list() //shrug
 	..()
 	name = "[areaMaster.name] fire alarm"
 	if(loc)
-		src.forceMove(loc)
+		src.loc = loc
 
 	if(dir)
 		src.dir = dir
@@ -1162,6 +1161,10 @@ var/global/list/firealarms = list() //shrug
 /obj/machinery/firealarm/Destroy()
 	firealarms.Remove(src)
 	..()
+
+/obj/machinery/firealarm/change_area(oldarea, newarea)
+	..()
+	name = replacetext(name,oldarea,newarea)
 
 /obj/machinery/partyalarm
 	name = "\improper PARTY BUTTON"

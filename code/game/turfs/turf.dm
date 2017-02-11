@@ -722,3 +722,6 @@
 	.=..()
 
 	src.map_element = ME
+
+/turf/attack_hand(mob/user as mob)
+	user.Move_Pulled(src)

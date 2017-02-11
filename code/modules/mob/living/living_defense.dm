@@ -272,12 +272,18 @@
 	if(istype(T))
 		var/datum/gas_mixture/G = loc.return_air() // Check if we're standing in an oxygenless environment
 		if(G)
-			oxy=G.oxygen
+			oxy=G.gas[GAS_OXYGEN]
 	if(oxy < 1 || fire_stacks <= 0)
 		ExtinguishMob() //If there's no oxygen in the tile we're on, put out the fire
 		return 1
 	var/turf/location = get_turf(src)
 	location.hotspot_expose(700, 50, 1,surfaces=1)
+
+#warn only here to help compile finish
+/atom/proc/extinguish()
+	on_fire=0
+	if(fire_overlay)
+		overlays -= fire_overlay
 
 /mob/living/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume)
 	adjust_fire_stacks(0.5)

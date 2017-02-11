@@ -39,9 +39,9 @@
 	name = "surface"
 	icon_state = "ironsand1"
 
-	carbon_dioxide = MOLES_CO2MARS
-	nitrogen = MOLES_N2MARS
-	oxygen = 0
+	carbon_dioxide = 0
+	oxygen = MOLES_O2STANDARD
+	nitrogen = MOLES_N2STANDARD
 	temperature = T20C
 
 /turf/unsimulated/floor/mars/New()

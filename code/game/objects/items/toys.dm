@@ -1150,19 +1150,15 @@
 					var/datum/lung_gas/waste/W = i
 					switch(W.id)
 						if("oxygen")
-							B.air_contents.adjust(o2 = 0.5)
+							B.air_contents.adjust_gas(o2 = 0.5)
 						if("carbon_dioxide")
-							B.air_contents.adjust(co2 = 0.5)
+							B.air_contents.adjust_gas(co2 = 0.5)
 						if("nitrogen")
-							B.air_contents.adjust(n2 = 0.5)
+							B.air_contents.adjust_gas(n2 = 0.5)
 						if("toxins")
-							B.air_contents.adjust(tx = 0.5)
-						if("/datum/gas/sleeping_agent")
-							var/datum/gas/sleeping_agent/S = new()
-							S.moles = 0.5
-							B.air_contents.adjust(traces = list(S))
+							B.air_contents.adjust_gas(tx = 0.5)
 		else
-			B.air_contents.adjust(co2 = 0.5)
+			B.air_contents.adjust_gas(co2 = 0.5)
 		B.air_contents.update_values()
 	else
 		var/moles = ONE_ATMOSPHERE*volume/(R_IDEAL_GAS_EQUATION*G.temperature)

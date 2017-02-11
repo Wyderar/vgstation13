@@ -366,7 +366,7 @@ obj/item/projectile/kinetic/New()
 /obj/item/projectile/fire_breath/shuttle_exhaust //don't stand behind rockets
 	fire_blast_type = /obj/effect/fire_blast/blue
 
-	temperature = PLASMA_UPPER_TEMPERATURE
+	temperature = 10000
 	max_range = 9
 	fire_damage = 20
 	fire_duration = 6 //shorter but hotter
