@@ -16,6 +16,12 @@
 #define JUKEBOX_RELOAD_COOLDOWN 600 // 60s
 
 var/global/global_playlists = list()
+
+/datum/admins/verb/update_playlist()
+	set name = "Update Playlists"
+	set category = "Fun"
+	load_juke_playlists()
+
 /proc/load_juke_playlists()
 	if(!config.media_base_url)
 		return

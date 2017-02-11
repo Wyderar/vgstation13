@@ -102,6 +102,7 @@ var/list/admin_verbs_fun = list(
 	/client/proc/make_sound,
 	/client/proc/toggle_random_events,
 	/client/proc/set_ooc,
+	/datum/admins/verb/update_playlist,
 	/client/proc/editappear,
 	/client/proc/commandname,
 	/client/proc/delete_all_adminbus,
