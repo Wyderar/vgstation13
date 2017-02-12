@@ -305,7 +305,6 @@ Subject's pulse: ??? BPM"})
 	src.add_fingerprint(user)
 	return
 
-#warn TODO: rewrite this jesus christ.
 //If human_standard is enabled, the message will be formatted to show which values are dangerous
 /obj/item/device/analyzer/proc/output_gas_scan(var/datum/gas_mixture/scanned, var/atom/container, human_standard = 1)
 	if(!scanned)

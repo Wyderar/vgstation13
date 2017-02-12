@@ -279,7 +279,6 @@
 	var/turf/location = get_turf(src)
 	location.hotspot_expose(700, 50, 1,surfaces=1)
 
-#warn only here to help compile finish
 /atom/proc/extinguish()
 	on_fire=0
 	if(fire_overlay)

@@ -601,9 +601,6 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 
 	if(!istype(usr, /mob/dead/observer))
 		return
-
-	// Shamelessly copied from the Gas Analyzers
-	#warn TODO: rewrite this.
 	if (!( istype(usr.loc, /turf) ))
 		return
 

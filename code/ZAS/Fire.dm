@@ -76,7 +76,6 @@ If it gains pressure too slowly, it may leak or just rupture instead of explodin
 /turf/simulated/apply_fire_protection()
 	fire_protection = world.time
 
-#warn IS THIS WISE? Perhaps add as setting????
 /turf/proc/adjacent_fire_act(turf/simulated/floor/source, temperature, volume)
 	return
 
@@ -104,7 +103,6 @@ If it gains pressure too slowly, it may leak or just rupture instead of explodin
 
 /turf/simulated/wall/adjacent_fire_act(turf/simulated/floor/adj_turf, datum/gas_mixture/adj_air, adj_temp, adj_volume)
 //	burn(adj_temp)
-#warn hilarity ensuing
 	if(adj_temp > melt_temperature && prob(1))
 		dismantle_wall(1)
 
@@ -140,10 +138,8 @@ If it gains pressure too slowly, it may leak or just rupture instead of explodin
 	var/igniting = 0
 	var/obj/effect/decal/cleanable/liquid_fuel/liquid = locate() in src
 
-#warn check recombustability differences
 	if(air_contents.check_combustability(liquid))
 		igniting = 1
-
 		create_fire(exposed_temperature)
 	return igniting
 
