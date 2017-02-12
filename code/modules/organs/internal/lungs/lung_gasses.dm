@@ -13,7 +13,7 @@
 
 /datum/lung_gas/proc/get_pp()
 	var/breath_pressure = breath.return_pressure()
-	return (breath.gas[id]/breath.total_moles)*breath_pressure
+	return (breath.gas[id]/breath.total_moles())*breath_pressure
 
 /datum/lung_gas/proc/get_moles()
 	return breath.gas[id]

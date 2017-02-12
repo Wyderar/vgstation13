@@ -1,6 +1,7 @@
-#define SANITIZE_BROWSER 1
-#define SANITIZE_LOG 2
-#define SANITIZE_TEMP 3
+#define SANITIZE_CHAT 1
+#define SANITIZE_BROWSER 2
+#define SANITIZE_LOG 3
+#define SANITIZE_TEMP 4
 
 /*
 	The most used output way is text chat. So fatal letters by default should be transformed into chat version.
@@ -12,6 +13,7 @@
 
 /datum/letter
 	var/letter = ""			//weird letter
+	var/chat = ""			//chat letter
 	var/browser = ""		//letter in browser windows
 	var/log = ""			//letter for logs
 	var/temp = ""			//temporatory letter for filled input windows
@@ -19,23 +21,27 @@
 
 	cyrillic_ya
 		letter = "ÿ"
+		chat = "&#255;"
 		browser = "&#1103;"
 		log = "ß"
 		temp = "¶"
 
-proc/sanitize_local(var/text, var/mode = SANITIZE_BROWSER)
+proc/sanitize_local(var/text, var/mode = SANITIZE_CHAT)
 	if(!istext(text))
 		return text
 	for(var/datum/letter/L in localisation)
 		switch(mode)
+			if(SANITIZE_CHAT)		//only basic input goes to chat
+				text = replace_characters(text, list(L.letter=L.chat, L.temp=L.chat))
+
 			if(SANITIZE_BROWSER)	//browser takes everything
-				text = replace_characters(text, list(L.letter=L.browser, L.temp=L.browser))
+				text = replace_characters(text, list(L.letter=L.browser, L.temp=L.browser, L.chat=L.browser))
 
 			if(SANITIZE_LOG)		//logs can get raw or prepared text
-				text = replace_characters(text, list(L.letter=L.log))
+				text = replace_characters(text, list(L.letter=L.log, L.chat=L.log))
 
 			if(SANITIZE_TEMP)		//same for input windows
-				text = replace_characters(text, list(L.letter=L.temp))
+				text = replace_characters(text, list(L.letter=L.temp, L.chat=L.temp))
 	return text
 
 /*
@@ -46,7 +52,7 @@ proc/sanitize_local(var/text, var/mode = SANITIZE_BROWSER)
 
 /proc/lhtml_encode(var/text)
 	text = sanitize_local(text, SANITIZE_TEMP)
-	text = lhtml_encode(text)
+	text = html_encode(text)
 	text = sanitize_local(text)
 	return text
 
