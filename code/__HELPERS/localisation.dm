@@ -12,7 +12,6 @@
 
 /datum/letter
 	var/letter = ""			//weird letter
-	var/chat = ""			//chat letter
 	var/browser = ""		//letter in browser windows
 	var/log = ""			//letter for logs
 	var/temp = ""			//temporatory letter for filled input windows
