@@ -69,13 +69,13 @@
 		i = findtext(Haystack, Needle, i + 1, End)
 
 //Removes a few problematic characters
-/*/proc/sanitize_simple(var/t,var/list/repl_chars = list("\n"="#","\t"="#","�"="�"))
+/proc/sanitize_simple(var/t,var/list/repl_chars = list("\n"="#","\t"="#","�"="�"))
 	for(var/char in repl_chars)
 		var/index = findtext(t, char)
 		while(index)
 			t = copytext(t, 1, index) + repl_chars[char] + copytext(t, index+1)
 			index = findtext(t, char)
-	return t*/
+	return t
 
 //Runs byond's sanitization proc along-side sanitize_simple
 /proc/sanitize(var/message, var/max_length = MAX_MESSAGE_LEN, var/encode = 1, var/trim = 1, var/extra = 1, var/mode = SANITIZE_BROWSER)
