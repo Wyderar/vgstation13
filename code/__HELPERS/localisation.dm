@@ -29,13 +29,13 @@ proc/sanitize_local(var/text, var/mode = SANITIZE_BROWSER)
 	for(var/datum/letter/L in localisation)
 		switch(mode)
 			if(SANITIZE_BROWSER)	//browser takes everything
-				text = replace_characters(text, list(L.letter=L.browser, L.temp=L.browser, L.chat=L.browser))
+				text = replace_characters(text, list(L.letter=L.browser, L.temp=L.browser))
 
 			if(SANITIZE_LOG)		//logs can get raw or prepared text
-				text = replace_characters(text, list(L.letter=L.log, L.chat=L.log))
+				text = replace_characters(text, list(L.letter=L.log))
 
 			if(SANITIZE_TEMP)		//same for input windows
-				text = replace_characters(text, list(L.letter=L.temp, L.chat=L.temp))
+				text = replace_characters(text, list(L.letter=L.temp))
 	return text
 
 /*
@@ -46,7 +46,7 @@ proc/sanitize_local(var/text, var/mode = SANITIZE_BROWSER)
 
 /proc/lhtml_encode(var/text)
 	text = sanitize_local(text, SANITIZE_TEMP)
-	text = html_encode(text)
+	text = lhtml_encode(text)
 	text = sanitize_local(text)
 	return text
 
