@@ -1,7 +1,6 @@
-#define SANITIZE_CHAT 1
-#define SANITIZE_BROWSER 2
-#define SANITIZE_LOG 3
-#define SANITIZE_TEMP 4
+#define SANITIZE_BROWSER 1
+#define SANITIZE_LOG 2
+#define SANITIZE_TEMP 3
 
 /*
 	The most used output way is text chat. So fatal letters by default should be transformed into chat version.
@@ -21,19 +20,15 @@
 
 	cyrillic_ya
 		letter = "ÿ"
-		chat = "&#255;"
 		browser = "&#1103;"
 		log = "ß"
 		temp = "¶"
 
-proc/sanitize_local(var/text, var/mode = SANITIZE_CHAT)
+proc/sanitize_local(var/text, var/mode = SANITIZE_BROWSER)
 	if(!istext(text))
 		return text
 	for(var/datum/letter/L in localisation)
 		switch(mode)
-			if(SANITIZE_CHAT)		//only basic input goes to chat
-				text = replace_characters(text, list(L.letter=L.chat, L.temp=L.chat))
-
 			if(SANITIZE_BROWSER)	//browser takes everything
 				text = replace_characters(text, list(L.letter=L.browser, L.temp=L.browser, L.chat=L.browser))
 
@@ -52,7 +47,7 @@ proc/sanitize_local(var/text, var/mode = SANITIZE_CHAT)
 
 /proc/lhtml_encode(var/text)
 	text = sanitize_local(text, SANITIZE_TEMP)
-	text = html_encode(text)
+	text = lhtml_encode(text)
 	text = sanitize_local(text)
 	return text
 
