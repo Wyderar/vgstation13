@@ -117,7 +117,7 @@
 //Runs byond's sanitization proc along-side strip_html_simple
 //I believe strip_html_simple() is required to run first to prevent '<' from displaying as '&lt;' that lhtml_encode() would cause
 /proc/adminscrub(var/t,var/limit=MAX_MESSAGE_LEN)
-	return copytext((lhtml_encode(strip_html_simple(t))),1,limit)
+	return copytext((html_encode(strip_html_simple(t))),1,limit)
 
 /proc/reverse_text(txt)
   var/i = length(txt)+1

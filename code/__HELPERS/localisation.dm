@@ -47,7 +47,7 @@ proc/sanitize_local(var/text, var/mode = SANITIZE_BROWSER)
 
 /proc/lhtml_encode(var/text)
 	text = sanitize_local(text, SANITIZE_TEMP)
-	text = lhtml_encode(text)
+	text = html_encode(text)
 	text = sanitize_local(text)
 	return text
 
