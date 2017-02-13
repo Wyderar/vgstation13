@@ -7,7 +7,7 @@
 		to_chat(usr, "<span class='warning'>Speech is currently admin-disabled.</span>")
 		return
 
-	msg = copytext(sanitize(msg), 1, MAX_MESSAGE_LEN)
+	msg = utf8_sanitize(msg, usr, MAX_MESSAGE_LEN)
 	if(!msg)
 		return
 

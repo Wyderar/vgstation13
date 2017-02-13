@@ -42,23 +42,6 @@ KeyState
 			var/T=KeyCode
 			KeyCode=text2num(KeyCode)
 			switch(event)
-				if("KeyUp")
-					if(key[KeyCode])
-						key[KeyCode]=0
-						switch(KeyCode)
-							if(16)shift&=~1
-							if(17)shift&=~2
-							if(18)shift&=~4
-						if(client)client.KeyUp(KeyCode,shift)
-				if("KeyDown")
-					if(!key[KeyCode])
-						key[KeyCode]=1
-						switch(KeyCode)
-							if(16)shift|=1
-							if(17)shift|=2
-							if(18)shift|=4
-						if(client)client.KeyDown(KeyCode,shift)
-					else if(key_repeat&&client)client.KeyDown(KeyCode)
 				if("MouseCoordinate")
 					mouse_x=copytext(T,1,findtext(T,","))
 					mouse_y=copytext(T,findtext(T,",")+1,0)
@@ -84,8 +67,6 @@ client
 	verb/manual_focus()
 		set hidden = 1
 		if(!keystate)return
-		if(manual_focus&&keystate.open)
-			KeyFocus()
 	proc
 		//info return functions
 		resolution()return resolution
@@ -93,10 +74,6 @@ client
 		system_type()return system_type
 		color_quality()return color_quality
 		//action functions
-		key_repeat(repeat)keystate.key_repeat=repeat
-		KeySetup(focus=1)
-			keystate=new(src)
-			if(focus)KeyFocus()
 		InfoSetup()
 			src<<browse({"
 <html>
@@ -129,63 +106,3 @@ window.location="?action=KeyState&MouseCoordinate="+event.screenX+","+event.scre
 </body>
 </html>
 "},"window=coordinate;size=0x0;can_resize=0;titlebar=0")
-
-		KeyFocus()
-			var/key_repeat_code
-			if(keystate.key_repeat)
-				key_repeat_code = {"
-<html>
-<head>
-<script type="text/javascript">
-
-function KeyUp(event)
-{
-	window.location="?action=KeyState&KeyUp="+event.keyCode
-}
-
-function KeyDown(event)
-{
-	window.location="?action=KeyState&KeyDown="+event.keyCode
-}
-
-</script>
-</head>
-<body onkeydown="KeyDown(event)" onkeyup="KeyUp(event)">
-<script type="text/javascript">
-this.focus()
-</script>
-</body></html>"}
-			else
-				key_repeat_code = {"
-<html>
-<head>
-<script type="text/javascript">
-
-function KeyUp(event)
-{
-	window.location="?action=KeyState&KeyUp="+event.keyCode
-	down\[event.keyCode]=0
-}
-
-function KeyDown(event)
-{
-if(down\[event.keyCode]==0)
-{
-	down\[event.keyCode]=1
-	window.location="?action=KeyState&KeyDown="+event.keyCode
-}
-}
-
-</script>
-</head>
-<body onkeydown="KeyDown(event)" onkeyup="KeyUp(event)">
-<script type="text/javascript">
-down = new Array(255);
-for(index=0; index<255; index+=1)
-{
-	down\[index]=0;
-}
-this.focus()
-</script>
-</body></html>"}
-			src<<browse(key_repeat_code,"window=KeyEvent;size=0x0;can_resize=0;titlebar=0")

@@ -169,7 +169,7 @@
 	var/turf/T = get_turf(src)
 	log_say("[key_name(src)] (@[T.x],[T.y],[T.z]) Blob Hivemind: [message]")
 
-	message = trim(copytext(sanitize(message), 1, MAX_MESSAGE_LEN))
+	message = utf8_sanitize(message, usr, MAX_MESSAGE_LEN)
 
 	if (!message)
 		return
