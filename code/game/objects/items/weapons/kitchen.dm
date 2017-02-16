@@ -149,6 +149,64 @@
 	icon_state = "pfork"
 	melt_temperature = MELTPOINT_PLASTIC
 
+/obj/item/weapon/kitchen/utensil/fork/afterattack(atom/target, mob/user as mob)
+	//I couldn't feasibly fix the overlay bugs caused by cleaning items we are wearing.
+	//So this is a workaround. This also makes more sense from an IC standpoint. ~Carn
+	//Overlay bugs can probably be fixed by updating the user's icon, see watercloset.dm
+
+	if(!user.Adjacent(target))
+		return
+
+	if(user.client && (target in user.client.screen) && !(user.is_holding_item(target)))
+		user.simple_message("<span class='notice'>You need to take that [target.name] off before cleaning it.</span>",
+			"<span class='notice'>You need to take that [target.name] off before destroying it.</span>")
+		playsound(get_turf(src), 'sound/vilka/kakyabudu1.ogg', 50, 1, -3)
+
+	else if(istype(target,/obj/effect/decal/cleanable))
+		user.simple_message("<span class='notice'>You scrub \the [target.name] out.</span>",
+			"<span class='warning'>You destroy [pick("an artwork","a valuable artwork","a rare piece of art","a rare piece of modern art")].</span>")
+		returnToPool(target)
+		playsound(get_turf(src), 'sound/vilka/skrskr4.ogg', 50, 1, -3)
+
+	else if(istype(target,/turf/simulated))
+		var/turf/simulated/T = target
+		var/list/cleanables = list()
+
+		for(var/obj/effect/decal/cleanable/CC in T)
+			if(!istype(CC) || !CC)
+				continue
+			cleanables += CC
+
+		for(var/obj/effect/decal/cleanable/CC in get_turf(user)) //Get all nearby decals drawn on this wall and erase them
+			if(CC.on_wall == target)
+				cleanables += CC
+
+		if(!cleanables.len)
+			user.simple_message("<span class='notice'>You fail to clean anything.</span>",
+				"<span class='notice'>There is nothing for you to vandalize.</span>")
+			playsound(get_turf(src), 'sound/vilka/kakyabudu1.ogg', 50, 1, -3)
+
+			return
+		cleanables = shuffle(cleanables)
+		var/obj/effect/decal/cleanable/C
+		for(var/obj/effect/decal/cleanable/d in cleanables)
+			if(d && istype(d))
+				C = d
+				break
+		user.simple_message("<span class='notice'>You scrub \the [C.name] out.</span>",
+			"<span class='warning'>You destroy [pick("an artwork","a valuable artwork","a rare piece of art","a rare piece of modern art")].</span>")
+		returnToPool(C)
+		playsound(get_turf(src), 'sound/vilka/skrskr4.ogg', 50, 1, -3)
+	else
+		user.simple_message("<span class='notice'>You clean \the [target.name].</span>",
+			"<span class='warning'>You [pick("deface","ruin","stain")] \the [target.name].</span>")
+		target.clean_blood()
+		playsound(get_turf(src), 'sound/vilka/skrskr1.ogg', 50, 1, -3)
+	return
+
+
+/*playsound(get_turf(src), 'sound/vilka/skrskr1.ogg', 50, 1, -3)*/
+
 /*
  * Knives
  */
@@ -609,47 +667,3 @@
 	else
 		playsound(src, 'sound/items/trayhit2.ogg', 35, 1)
 	send_items_flying()
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//Enough with the violent stuff, here's what happens if you try putting food on it
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-/*/obj/item/weapon/tray/attackby(obj/item/weapon/W as obj, mob/user as mob)
-	if(istype(W,/obj/item/weapon/kitchen/utensil/fork))
-		if (W.icon_state == "forkloaded")
-			to_chat(user, "<span class='warning'>You already have omelette on your fork.</span>")
-			return
-		W.icon = 'icons/obj/kitchen.dmi'
-		W.icon_state = "forkloaded"
-		to_chat(viewers(3,user), "[user] takes a piece of omelette with his fork!")
-		reagents.remove_reagent(NUTRIMENT, 1)
-		if (reagents.total_volume <= 0)
-			del(src)*/
-
-
-/*			if (prob(33))
-						var/turf/location = H.loc
-						if (istype(location, /turf/simulated))
-							location.add_blood(H)
-					if (H.wear_mask)
-						H.wear_mask.add_blood(H)
-					if (H.head)
-						H.head.add_blood(H)
-					if (H.glasses && prob(33))
-						H.glasses.add_blood(H)
-					if (istype(user, /mob/living/carbon/human))
-						var/mob/living/carbon/human/user2 = user
-						if (user2.gloves)
-							user2.gloves.add_blood(H)
-						else
-							user2.add_blood(H)
-						if (prob(15))
-							if (user2.wear_suit)
-								user2.wear_suit.add_blood(H)
-							else if (user2.w_uniform)
-								user2.w_uniform.add_blood(H)*/
